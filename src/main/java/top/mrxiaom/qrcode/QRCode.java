@@ -372,7 +372,7 @@ public class QRCode {
         return qr;
     }
 
-    private static String _8BitByteEncoding = QRUtil.getJISEncoding();
+    private static String _8BitByteEncoding = "UTF-8";
 
     public static void set8BitByteEncoding(final String _8BitByteEncoding) {
         QRCode._8BitByteEncoding = _8BitByteEncoding;
