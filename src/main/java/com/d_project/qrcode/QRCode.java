@@ -1,7 +1,5 @@
 package com.d_project.qrcode;
 
-import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -540,42 +538,6 @@ public void addData(String data) {
     qr.make();
 
     return qr;
-  }
-
-  /**
-   * イメージを取得する。
-   * @param cellSize セルのサイズ(pixel)
-   * @param margin 余白(pixel)
-   */
-  public BufferedImage createImage(int cellSize, int margin) throws IOException {
-
-    int imageSize = getModuleCount() * cellSize + margin * 2;
-
-    BufferedImage image = new BufferedImage(imageSize, imageSize, BufferedImage.TYPE_INT_RGB);
-
-    for (int y = 0; y < imageSize; y++) {
-
-      for (int x = 0; x < imageSize; x++) {
-
-        if (margin <= x && x < imageSize - margin
-                && margin <= y && y < imageSize - margin) {
-
-          int col = (x - margin) / cellSize;
-          int row = (y - margin) / cellSize;
-
-          if (isDark(row, col) ) {
-              image.setRGB(x, y, 0x000000);
-          } else {
-              image.setRGB(x, y, 0xffffff);
-          }
-
-        } else {
-          image.setRGB(x, y, 0xffffff);
-        }
-      }
-    }
-
-    return image;
   }
 
   private static String _8BitByteEncoding = QRUtil.getJISEncoding();
