@@ -6,16 +6,19 @@ public class ImageUtil {
 
     /**
      * イメージを取得する。
+     *
      * @param cellSize セルのサイズ(pixel)
-     * @param margin 余白(pixel)
+     * @param margin   余白(pixel)
      */
     public static BufferedImage createImage(QRCode qrCode, int cellSize, int margin) {
         return createImage(qrCode, cellSize, margin, 0x000000, 0xFFFFFF);
     }
+
     /**
      * イメージを取得する。
+     *
      * @param cellSize セルのサイズ(pixel)
-     * @param margin 余白(pixel)
+     * @param margin   余白(pixel)
      */
     public static BufferedImage createImage(QRCode qrCode, int cellSize, int margin, int darkColor, int lightColor) {
 
@@ -33,7 +36,7 @@ public class ImageUtil {
                     int col = (x - margin) / cellSize;
                     int row = (y - margin) / cellSize;
 
-                    if (qrCode.isDark(row, col) ) {
+                    if (qrCode.isDark(row, col)) {
                         image.setRGB(x, y, darkColor);
                     } else {
                         image.setRGB(x, y, lightColor);
