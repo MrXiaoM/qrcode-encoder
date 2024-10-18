@@ -282,7 +282,6 @@ public class RSBlock {
 
         List<RSBlock> list = new ArrayList<>();
         for (int i = 0; i < length; i++) {
-
             int count = rsBlock[i * 3];
             int totalCount = rsBlock[i * 3 + 1];
             int dataCount = rsBlock[i * 3 + 2];
@@ -297,21 +296,9 @@ public class RSBlock {
 
     private static int[] getRsBlockTable(int typeNumber, ErrorCorrectionLevel errorCorrectionLevel) {
         try {
-            switch (errorCorrectionLevel) {
-                case L:
-                    return RS_BLOCK_TABLE[(typeNumber - 1) * 4];
-                case M:
-                    return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 1];
-                case Q:
-                    return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 2];
-                case H:
-                    return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 3];
-                default:
-                    break;
-            }
+            return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + errorCorrectionLevel.e];
         } catch (Exception ignored) {
         }
-
         throw new IllegalArgumentException("tn:" + typeNumber + "/ecl:" + errorCorrectionLevel);
     }
 }

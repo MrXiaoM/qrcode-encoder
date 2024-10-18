@@ -19,7 +19,7 @@ public class QRKanji extends AbstractQRData {
 
     public void write(BitBuffer buffer) {
         try {
-            byte[] data = getData().getBytes(QRUtil.getJISEncoding());
+            byte[] data = getData().getBytes(QRUtil.JIS_ENCODING);
             int i = 0;
             while (i + 1 < data.length) {
                 int c = ((0xff & data[i]) << 8) | (0xff & data[i + 1]);
@@ -44,7 +44,7 @@ public class QRKanji extends AbstractQRData {
 
     public int getLength() {
         try {
-            return getData().getBytes(QRUtil.getJISEncoding()).length / 2;
+            return getData().getBytes(QRUtil.JIS_ENCODING).length / 2;
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e.getMessage());
         }

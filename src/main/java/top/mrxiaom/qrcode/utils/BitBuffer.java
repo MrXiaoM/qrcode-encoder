@@ -44,17 +44,14 @@ public class BitBuffer {
     }
 
     public void put(boolean bit) {
-
         if (length == buffer.length * 8) {
             byte[] newBuffer = new byte[buffer.length + increments];
             System.arraycopy(buffer, 0, newBuffer, 0, buffer.length);
             buffer = newBuffer;
         }
-
         if (bit) {
             buffer[length / 8] |= (byte) (0x80 >>> (length % 8));
         }
-
         length++;
     }
 }

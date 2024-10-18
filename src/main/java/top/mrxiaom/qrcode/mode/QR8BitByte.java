@@ -18,15 +18,11 @@ public class QR8BitByte extends AbstractQRData {
     }
 
     public void write(BitBuffer buffer) {
-
         try {
-
             byte[] data = getData().getBytes(QRCode.get8BitByteEncoding());
-
             for (byte datum : data) {
                 buffer.put(datum, 8);
             }
-
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e.getMessage());
         }

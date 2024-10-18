@@ -29,7 +29,6 @@ public class QRMath {
     }
 
     public static int glog(int n) {
-
         if (n < 1) {
             throw new ArithmeticException("log(" + n + ")");
         }

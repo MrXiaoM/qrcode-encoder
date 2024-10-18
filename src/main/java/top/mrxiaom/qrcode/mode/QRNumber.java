@@ -15,17 +15,13 @@ public class QRNumber extends AbstractQRData {
     }
 
     public void write(BitBuffer buffer) {
-
         String data = getData();
-
         int i = 0;
-
         while (i + 2 < data.length()) {
             int num = parseInt(data.substring(i, i + 3));
             buffer.put(num, 10);
             i += 3;
         }
-
         if (i < data.length()) {
             if (data.length() - i == 1) {
                 int num = parseInt(data.substring(i, i + 1));

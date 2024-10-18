@@ -15,16 +15,12 @@ public class QRAlphaNum extends AbstractQRData {
     }
 
     public void write(BitBuffer buffer) {
-
         char[] c = getData().toCharArray();
-
         int i = 0;
-
         while (i + 1 < c.length) {
             buffer.put(getCode(c[i]) * 45 + getCode(c[i + 1]), 11);
             i += 2;
         }
-
         if (i < c.length) {
             buffer.put(getCode(c[i]), 6);
         }
@@ -35,7 +31,6 @@ public class QRAlphaNum extends AbstractQRData {
     }
 
     private static int getCode(char c) {
-
         if ('0' <= c && c <= '9') {
             return c - '0';
         } else if ('A' <= c && c <= 'Z') {

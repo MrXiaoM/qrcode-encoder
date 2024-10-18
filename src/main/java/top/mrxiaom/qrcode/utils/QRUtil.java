@@ -15,15 +15,11 @@ import java.util.Collection;
  */
 public class QRUtil {
 
-    private QRUtil() {
-    }
+    private QRUtil() {}
 
     private static final int PAD0 = 0xEC;
     private static final int PAD1 = 0x11;
-
-    public static String getJISEncoding() {
-        return "SJIS";
-    }
+    public final static String JIS_ENCODING = "SJIS";
 
     public static int[] getPatternPosition(int typeNumber) {
         return PATTERN_POSITION_TABLE[typeNumber - 1];
@@ -231,7 +227,7 @@ public class QRUtil {
 
     private static boolean isKanji(String s) {
         try {
-            byte[] data = s.getBytes(QRUtil.getJISEncoding());
+            byte[] data = s.getBytes(JIS_ENCODING);
             int i = 0;
             while (i + 1 < data.length) {
                 int c = ((0xff & data[i]) << 8) | (0xff & data[i + 1]);

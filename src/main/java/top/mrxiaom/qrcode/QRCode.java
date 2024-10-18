@@ -10,14 +10,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * QRコード.
- * <br/>■使い方
- * <br/>(1) 誤り訂正レベル、データ等、諸パラメータを設定します。
- * <br/>(2) make() を呼び出してQRコードを作成します。
- * <br/>(3) getModuleCount() と isDark() で、QRコードのデータを取得します。
+ * 二维码编码器
+ * <br/>■ 使用方法
+ * <br/>(1) 直接实例化或使用 create() 创建实例，设置纠错等级、数据等参数
+ * <br/>(2) 调用 make() 制作二维码
+ * <br/>(3) 调用 getModuleCount() 和 isDark() 等取得二维码图像数据
  * <br/>
  *
  * @author Kazuhiko Arase
+ * @see top.mrxiaom.qrcode.utils.ImageUtil#createImage
  */
 public class QRCode {
 
@@ -28,8 +29,8 @@ public class QRCode {
     private final List<AbstractQRData> qrDataList;
 
     /**
-     * コンストラクタ
-     * <br>型番1, 誤り訂正レベルH のQRコードのインスタンスを生成します。
+     * 构造函数
+     * <br>类型1，纠错等级H(30%)的二维码实例
      *
      * @see ErrorCorrectionLevel
      */
@@ -40,18 +41,18 @@ public class QRCode {
     }
 
     /**
-     * 型番を取得する。
+     * 获取类型数字
      *
-     * @return 型番
+     * @return 类型
      */
     public int getTypeNumber() {
         return typeNumber;
     }
 
     /**
-     * 型番を設定する。
+     * 设置类型数字
      *
-     * @param typeNumber 型番
+     * @param typeNumber 类型
      */
     public void setTypeNumber(int typeNumber) {
         this.typeNumber = typeNumber;
@@ -145,6 +146,9 @@ public class QRCode {
         }
     }
 
+    /**
+     * 二维码的行数或列数 (行数和列数相等)
+     */
     public int getModuleCount() {
         return moduleCount;
     }
