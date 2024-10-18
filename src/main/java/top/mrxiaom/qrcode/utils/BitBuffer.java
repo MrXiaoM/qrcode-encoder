@@ -1,4 +1,4 @@
-package top.mrxiaom.qrcode;
+package top.mrxiaom.qrcode.utils;
 
 /**
  * BitBuffer
@@ -9,11 +9,11 @@ public class BitBuffer {
 
     private byte[] buffer;
     private int length;
-    private int inclements;
+    private final int increments;
 
     public BitBuffer() {
-        inclements = 32;
-        buffer = new byte[inclements];
+        increments = 32;
+        buffer = new byte[increments];
         length = 0;
     }
 
@@ -46,7 +46,7 @@ public class BitBuffer {
     public void put(boolean bit) {
 
         if (length == buffer.length * 8) {
-            byte[] newBuffer = new byte[buffer.length + inclements];
+            byte[] newBuffer = new byte[buffer.length + increments];
             System.arraycopy(buffer, 0, newBuffer, 0, buffer.length);
             buffer = newBuffer;
         }

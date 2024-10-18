@@ -1,4 +1,8 @@
-package top.mrxiaom.qrcode;
+package top.mrxiaom.qrcode.mode;
+
+import top.mrxiaom.qrcode.utils.BitBuffer;
+import top.mrxiaom.qrcode.enums.Mode;
+import top.mrxiaom.qrcode.QRCode;
 
 import java.io.UnsupportedEncodingException;
 
@@ -7,7 +11,7 @@ import java.io.UnsupportedEncodingException;
  *
  * @author Kazuhiko Arase
  */
-class QR8BitByte extends QRData {
+public class QR8BitByte extends AbstractQRData {
 
     public QR8BitByte(String data) {
         super(Mode.MODE_8BIT_BYTE, data);

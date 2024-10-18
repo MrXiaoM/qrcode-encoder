@@ -1,16 +1,25 @@
-package top.mrxiaom.qrcode;
+package top.mrxiaom.qrcode.utils;
+
+import top.mrxiaom.qrcode.enums.ErrorCorrectionLevel;
+import top.mrxiaom.qrcode.enums.Mode;
+import top.mrxiaom.qrcode.QRCode;
+import top.mrxiaom.qrcode.mode.AbstractQRData;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Collection;
 
 /**
  * QRUtil
  *
  * @author Kazuhiko Arase
  */
-class QRUtil {
+public class QRUtil {
 
     private QRUtil() {
     }
+
+    private static final int PAD0 = 0xEC;
+    private static final int PAD1 = 0x11;
 
     public static String getJISEncoding() {
         return "SJIS";
@@ -76,134 +85,52 @@ class QRUtil {
             {{652, 395, 271, 167}, {513, 311, 213, 131}, {364, 221, 151, 93}, {288, 174, 119, 74}}
     };
 
-    public static int getMaxLength(int typeNumber, int mode, int errorCorrectionLevel) {
-
+    public static int getMaxLength(int typeNumber, Mode mode, ErrorCorrectionLevel errorCorrectionLevel) {
         int t = typeNumber - 1;
-        int e;
-        int m;
-
-        switch (errorCorrectionLevel) {
-            case ErrorCorrectionLevel.L:
-                e = 0;
-                break;
-            case ErrorCorrectionLevel.M:
-                e = 1;
-                break;
-            case ErrorCorrectionLevel.Q:
-                e = 2;
-                break;
-            case ErrorCorrectionLevel.H:
-                e = 3;
-                break;
-            default:
-                throw new IllegalArgumentException("e:" + errorCorrectionLevel);
-        }
-
-        switch (mode) {
-            case Mode.MODE_NUMBER:
-                m = 0;
-                break;
-            case Mode.MODE_ALPHA_NUM:
-                m = 1;
-                break;
-            case Mode.MODE_8BIT_BYTE:
-                m = 2;
-                break;
-            case Mode.MODE_KANJI:
-                m = 3;
-                break;
-            default:
-                throw new IllegalArgumentException("m:" + mode);
-        }
-
+        int e = errorCorrectionLevel.e;
+        int m = mode.m;
         return MAX_LENGTH[t][e][m];
     }
 
-
     /**
-     * エラー訂正多項式を取得する。
+     * 获取纠错公式
      */
     public static Polynomial getErrorCorrectPolynomial(int errorCorrectLength) {
-
         Polynomial a = new Polynomial(new int[]{1});
-
         for (int i = 0; i < errorCorrectLength; i++) {
             a = a.multiply(new Polynomial(new int[]{1, QRMath.gexp(i)}));
         }
-
         return a;
     }
 
     /**
-     * 指定されたパターンのマスクを取得する。
-     */
-    public static boolean getMask(int maskPattern, int i, int j) {
-
-        switch (maskPattern) {
-
-            case MaskPattern.PATTERN000:
-                return (i + j) % 2 == 0;
-            case MaskPattern.PATTERN001:
-                return i % 2 == 0;
-            case MaskPattern.PATTERN010:
-                return j % 3 == 0;
-            case MaskPattern.PATTERN011:
-                return (i + j) % 3 == 0;
-            case MaskPattern.PATTERN100:
-                return (i / 2 + j / 3) % 2 == 0;
-            case MaskPattern.PATTERN101:
-                return (i * j) % 2 + (i * j) % 3 == 0;
-            case MaskPattern.PATTERN110:
-                return ((i * j) % 2 + (i * j) % 3) % 2 == 0;
-            case MaskPattern.PATTERN111:
-                return ((i * j) % 3 + (i + j) % 2) % 2 == 0;
-
-            default:
-                throw new IllegalArgumentException("mask:" + maskPattern);
-        }
-    }
-
-    /**
-     * 失点を取得する
+     * 获取丢失点
      */
     public static int getLostPoint(QRCode qrCode) {
-
         int moduleCount = qrCode.getModuleCount();
-
         int lostPoint = 0;
 
-
         // LEVEL1
-
         for (int row = 0; row < moduleCount; row++) {
-
             for (int col = 0; col < moduleCount; col++) {
-
                 int sameCount = 0;
                 boolean dark = qrCode.isDark(row, col);
-
                 for (int r = -1; r <= 1; r++) {
-
                     if (row + r < 0 || moduleCount <= row + r) {
                         continue;
                     }
-
                     for (int c = -1; c <= 1; c++) {
-
                         if (col + c < 0 || moduleCount <= col + c) {
                             continue;
                         }
-
                         if (r == 0 && c == 0) {
                             continue;
                         }
-
                         if (dark == qrCode.isDark(row + r, col + c)) {
                             sameCount++;
                         }
                     }
                 }
-
                 if (sameCount > 5) {
                     lostPoint += (3 + sameCount - 5);
                 }
@@ -211,7 +138,6 @@ class QRUtil {
         }
 
         // LEVEL2
-
         for (int row = 0; row < moduleCount - 1; row++) {
             for (int col = 0; col < moduleCount - 1; col++) {
                 int count = 0;
@@ -226,7 +152,6 @@ class QRUtil {
         }
 
         // LEVEL3
-
         for (int row = 0; row < moduleCount; row++) {
             for (int col = 0; col < moduleCount - 6; col++) {
                 if (qrCode.isDark(row, col)
@@ -256,9 +181,7 @@ class QRUtil {
         }
 
         // LEVEL4
-
         int darkCount = 0;
-
         for (int col = 0; col < moduleCount; col++) {
             for (int row = 0; row < moduleCount; row++) {
                 if (qrCode.isDark(row, col)) {
@@ -273,7 +196,7 @@ class QRUtil {
         return lostPoint;
     }
 
-    public static int getMode(String s) {
+    public static Mode getMode(String s) {
         if (isAlphaNum(s)) {
             if (isNumber(s)) {
                 return Mode.MODE_NUMBER;
@@ -307,26 +230,17 @@ class QRUtil {
     }
 
     private static boolean isKanji(String s) {
-
         try {
-
             byte[] data = s.getBytes(QRUtil.getJISEncoding());
-
             int i = 0;
-
             while (i + 1 < data.length) {
-
                 int c = ((0xff & data[i]) << 8) | (0xff & data[i + 1]);
-
                 if (!(0x8140 <= c && c <= 0x9FFC) && !(0xE040 <= c && c <= 0xEBBF)) {
                     return false;
                 }
-
                 i += 2;
             }
-
             return i >= data.length;
-
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e.getMessage());
         }
@@ -358,15 +272,128 @@ class QRUtil {
     }
 
     private static int getBCHDigit(int data) {
-
         int digit = 0;
-
         while (data != 0) {
             digit++;
             data >>>= 1;
         }
-
         return digit;
+    }
 
+    public static byte[] createData(int typeNumber, ErrorCorrectionLevel errorCorrectionLevel, Collection<AbstractQRData> dataArray) {
+
+        RSBlock[] rsBlocks = RSBlock.getRSBlocks(typeNumber, errorCorrectionLevel);
+
+        BitBuffer buffer = new BitBuffer();
+
+        for (AbstractQRData data : dataArray) {
+            buffer.put(data.getMode(), 4);
+            buffer.put(data.getLength(), data.getLengthInBits(typeNumber));
+            data.write(buffer);
+        }
+
+        // 最大データ数を計算
+        int totalDataCount = 0;
+        for (RSBlock rsBlock : rsBlocks) {
+            totalDataCount += rsBlock.getDataCount();
+        }
+
+        if (buffer.getLengthInBits() > totalDataCount * 8) {
+            throw new IllegalArgumentException("code length overflow. ("
+                    + buffer.getLengthInBits()
+                    + ">"
+                    + totalDataCount * 8
+                    + ")");
+        }
+
+        // 終端コード
+        if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
+            buffer.put(0, 4);
+        }
+
+        // padding
+        while (buffer.getLengthInBits() % 8 != 0) {
+            buffer.put(false);
+        }
+
+        // padding
+        while (true) {
+
+            if (buffer.getLengthInBits() >= totalDataCount * 8) {
+                break;
+            }
+            buffer.put(PAD0, 8);
+
+            if (buffer.getLengthInBits() >= totalDataCount * 8) {
+                break;
+            }
+            buffer.put(PAD1, 8);
+        }
+
+        return createBytes(buffer, rsBlocks);
+    }
+
+    private static byte[] createBytes(BitBuffer buffer, RSBlock[] rsBlocks) {
+
+        int offset = 0;
+
+        int maxDcCount = 0;
+        int maxEcCount = 0;
+
+        int[][] dcdata = new int[rsBlocks.length][];
+        int[][] ecdata = new int[rsBlocks.length][];
+
+        for (int r = 0; r < rsBlocks.length; r++) {
+
+            int dcCount = rsBlocks[r].getDataCount();
+            int ecCount = rsBlocks[r].getTotalCount() - dcCount;
+
+            maxDcCount = Math.max(maxDcCount, dcCount);
+            maxEcCount = Math.max(maxEcCount, ecCount);
+
+            dcdata[r] = new int[dcCount];
+            for (int i = 0; i < dcdata[r].length; i++) {
+                dcdata[r][i] = 0xff & buffer.getBuffer()[i + offset];
+            }
+            offset += dcCount;
+
+            Polynomial rsPoly = QRUtil.getErrorCorrectPolynomial(ecCount);
+            Polynomial rawPoly = new Polynomial(dcdata[r], rsPoly.getLength() - 1);
+
+            Polynomial modPoly = rawPoly.mod(rsPoly);
+            ecdata[r] = new int[rsPoly.getLength() - 1];
+            for (int i = 0; i < ecdata[r].length; i++) {
+                int modIndex = i + modPoly.getLength() - ecdata[r].length;
+                ecdata[r][i] = (modIndex >= 0) ? modPoly.get(modIndex) : 0;
+            }
+
+        }
+
+        int totalCodeCount = 0;
+        for (RSBlock rsBlock : rsBlocks) {
+            totalCodeCount += rsBlock.getTotalCount();
+        }
+
+        byte[] data = new byte[totalCodeCount];
+
+        int index = 0;
+
+        for (int i = 0; i < maxDcCount; i++) {
+            for (int r = 0; r < rsBlocks.length; r++) {
+                if (i < dcdata[r].length) {
+                    data[index++] = (byte) dcdata[r][i];
+                }
+            }
+        }
+
+        for (int i = 0; i < maxEcCount; i++) {
+            for (int r = 0; r < rsBlocks.length; r++) {
+                if (i < ecdata[r].length) {
+                    data[index++] = (byte) ecdata[r][i];
+                }
+            }
+        }
+
+        return data;
     }
 }

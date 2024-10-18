@@ -1,24 +1,28 @@
-package top.mrxiaom.qrcode;
+package top.mrxiaom.qrcode.utils;
+
+import top.mrxiaom.qrcode.QRCode;
 
 import java.awt.image.BufferedImage;
 
 public class ImageUtil {
 
     /**
-     * イメージを取得する。
+     * 创建二维码图像
      *
-     * @param cellSize セルのサイズ(pixel)
-     * @param margin   余白(pixel)
+     * @param cellSize 单格大小(像素)
+     * @param margin   边框留白(像素)
      */
     public static BufferedImage createImage(QRCode qrCode, int cellSize, int margin) {
         return createImage(qrCode, cellSize, margin, 0x000000, 0xFFFFFF);
     }
 
     /**
-     * イメージを取得する。
+     * 创建二维码图像
      *
-     * @param cellSize セルのサイズ(pixel)
-     * @param margin   余白(pixel)
+     * @param cellSize   单格大小(像素)
+     * @param margin     边框留白(像素)
+     * @param darkColor  二维码暗色前景(RGB)
+     * @param lightColor 二维码亮色背景(RGB)
      */
     public static BufferedImage createImage(QRCode qrCode, int cellSize, int margin, int darkColor, int lightColor) {
 

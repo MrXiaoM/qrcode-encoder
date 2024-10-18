@@ -1,11 +1,14 @@
-package top.mrxiaom.qrcode;
+package top.mrxiaom.qrcode.mode;
+
+import top.mrxiaom.qrcode.utils.BitBuffer;
+import top.mrxiaom.qrcode.enums.Mode;
 
 /**
  * QRNumber
  *
  * @author Kazuhiko Arase
  */
-public class QRNumber extends QRData {
+public class QRNumber extends AbstractQRData {
 
     public QRNumber(String data) {
         super(Mode.MODE_NUMBER, data);

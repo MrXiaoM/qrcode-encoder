@@ -1,4 +1,6 @@
-package top.mrxiaom.qrcode;
+package top.mrxiaom.qrcode.utils;
+
+import top.mrxiaom.qrcode.enums.ErrorCorrectionLevel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,7 +10,7 @@ import java.util.List;
  *
  * @author Kazuhiko Arase
  */
-class RSBlock {
+public class RSBlock {
 
     private static final int[][] RS_BLOCK_TABLE = {
 
@@ -274,14 +276,11 @@ class RSBlock {
         return totalCount;
     }
 
-    public static RSBlock[] getRSBlocks(int typeNumber, int errorCorrectionLevel) {
-
+    public static RSBlock[] getRSBlocks(int typeNumber, ErrorCorrectionLevel errorCorrectionLevel) {
         int[] rsBlock = getRsBlockTable(typeNumber, errorCorrectionLevel);
         int length = rsBlock.length / 3;
 
-
-        List<RSBlock> list = new ArrayList<RSBlock>();
-
+        List<RSBlock> list = new ArrayList<>();
         for (int i = 0; i < length; i++) {
 
             int count = rsBlock[i * 3];
@@ -296,23 +295,20 @@ class RSBlock {
         return list.toArray(new RSBlock[0]);
     }
 
-    private static int[] getRsBlockTable(int typeNumber, int errorCorrectionLevel) {
-
+    private static int[] getRsBlockTable(int typeNumber, ErrorCorrectionLevel errorCorrectionLevel) {
         try {
-
             switch (errorCorrectionLevel) {
-                case ErrorCorrectionLevel.L:
+                case L:
                     return RS_BLOCK_TABLE[(typeNumber - 1) * 4];
-                case ErrorCorrectionLevel.M:
+                case M:
                     return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 1];
-                case ErrorCorrectionLevel.Q:
+                case Q:
                     return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 2];
-                case ErrorCorrectionLevel.H:
+                case H:
                     return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 3];
                 default:
                     break;
             }
-
         } catch (Exception ignored) {
         }
 

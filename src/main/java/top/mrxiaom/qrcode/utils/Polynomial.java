@@ -1,4 +1,4 @@
-package top.mrxiaom.qrcode;
+package top.mrxiaom.qrcode.utils;
 
 /**
  * Polynomial

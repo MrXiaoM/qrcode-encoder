@@ -1,5 +1,11 @@
 package top.mrxiaom.qrcode;
 
+import top.mrxiaom.qrcode.enums.ErrorCorrectionLevel;
+import top.mrxiaom.qrcode.enums.MaskPattern;
+import top.mrxiaom.qrcode.enums.Mode;
+import top.mrxiaom.qrcode.mode.*;
+import top.mrxiaom.qrcode.utils.QRUtil;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,19 +21,11 @@ import java.util.List;
  */
 public class QRCode {
 
-    private static final int PAD0 = 0xEC;
-
-    private static final int PAD1 = 0x11;
-
     private int typeNumber;
-
     private Boolean[][] modules;
-
     private int moduleCount;
-
-    private int errorCorrectionLevel;
-
-    private final List<QRData> qrDataList;
+    private ErrorCorrectionLevel errorCorrectionLevel;
+    private final List<AbstractQRData> qrDataList;
 
     /**
      * コンストラクタ
@@ -60,75 +58,68 @@ public class QRCode {
     }
 
     /**
-     * 誤り訂正レベルを取得する。
+     * 获取二维码纠错等级
      *
-     * @return 誤り訂正レベル
+     * @return 纠错等级
      * @see ErrorCorrectionLevel
      */
-    public int getErrorCorrectionLevel() {
+    public ErrorCorrectionLevel getErrorCorrectionLevel() {
         return errorCorrectionLevel;
     }
 
     /**
-     * 誤り訂正レベルを設定する。
+     * 设置二维码纠错等级
      *
-     * @param errorCorrectionLevel 誤り訂正レベル
+     * @param errorCorrectionLevel 纠错等级
      * @see ErrorCorrectionLevel
      */
-    public void setErrorCorrectionLevel(int errorCorrectionLevel) {
+    public void setErrorCorrectionLevel(ErrorCorrectionLevel errorCorrectionLevel) {
         this.errorCorrectionLevel = errorCorrectionLevel;
     }
 
     /**
-     * データを追加する。
+     * 追加数据，自动判定模式
      *
-     * @param data データ
+     * @param data 数据
      */
     public void addData(String data) {
         addData(data, QRUtil.getMode(data));
     }
 
     /**
-     * モードを指定してデータを追加する。
+     * 指定模式追加数据
      *
-     * @param data データ
-     * @param mode モード
+     * @param data 数据
+     * @param mode 模式
      * @see Mode
      */
-    public void addData(String data, int mode) {
-
+    public void addData(String data, Mode mode) {
         switch (mode) {
-
-            case Mode.MODE_NUMBER:
+            case MODE_NUMBER:
                 addData(new QRNumber(data));
                 break;
-
-            case Mode.MODE_ALPHA_NUM:
+            case MODE_ALPHA_NUM:
                 addData(new QRAlphaNum(data));
                 break;
-
-            case Mode.MODE_8BIT_BYTE:
+            case MODE_8BIT_BYTE:
                 addData(new QR8BitByte(data));
                 break;
-
-            case Mode.MODE_KANJI:
+            case MODE_KANJI:
                 addData(new QRKanji(data));
                 break;
-
             default:
                 throw new IllegalArgumentException("mode:" + mode);
         }
     }
 
     /**
-     * データをクリアする。
-     * <br/>addData で追加されたデータをクリアします。
+     * 清空使用 addData 添加的数据
      */
     public void clearData() {
         qrDataList.clear();
     }
 
-    protected void addData(QRData qrData) {
+    protected void addData(AbstractQRData qrData) {
         qrDataList.add(qrData);
     }
 
@@ -136,15 +127,15 @@ public class QRCode {
         return qrDataList.size();
     }
 
-    protected QRData getData(int index) {
+    protected AbstractQRData getData(int index) {
         return qrDataList.get(index);
     }
 
     /**
-     * 暗モジュールかどうかを取得する。
+     * 获取指定坐标是否为暗块
      *
-     * @param row 行 (0 ～ モジュール数 - 1)
-     * @param col 列 (0 ～ モジュール数 - 1)
+     * @param row 行索引 (0 到 行数-1)
+     * @param col 列索引 (0 到 列数-1)
      */
     public boolean isDark(int row, int col) {
         if (modules[row][col] != null) {
@@ -154,45 +145,37 @@ public class QRCode {
         }
     }
 
-    /**
-     * モジュール数を取得する。
-     */
     public int getModuleCount() {
         return moduleCount;
     }
 
     /**
-     * QRコードを作成する。
+     * 制作二维码
      */
     public void make() {
         make(false, getBestMaskPattern());
     }
 
-    private int getBestMaskPattern() {
+    private MaskPattern getBestMaskPattern() {
 
         int minLostPoint = 0;
-        int pattern = 0;
+        MaskPattern pattern = MaskPattern.PATTERN000;
 
-        for (int i = 0; i < 8; i++) {
-
-            make(true, i);
+        for (MaskPattern maskPattern : MaskPattern.values()) {
+            make(true, maskPattern);
 
             int lostPoint = QRUtil.getLostPoint(this);
 
-            if (i == 0 || minLostPoint > lostPoint) {
+            if (maskPattern == MaskPattern.PATTERN000 || minLostPoint > lostPoint) {
                 minLostPoint = lostPoint;
-                pattern = i;
+                pattern = maskPattern;
             }
         }
 
         return pattern;
     }
 
-    /**
-     *
-     */
-    private void make(boolean test, int maskPattern) {
-
+    private void make(boolean test, MaskPattern maskPattern) {
         // モジュール初期化
         moduleCount = typeNumber * 4 + 17;
         modules = new Boolean[moduleCount][moduleCount];
@@ -205,60 +188,44 @@ public class QRCode {
         setupPositionAdjustPattern();
         setupTimingPattern();
 
-        setupTypeInfo(test, maskPattern);
+        setupTypeInfo(test, maskPattern.value);
 
         if (typeNumber >= 7) {
             setupTypeNumber(test);
         }
 
-        QRData[] dataArray = qrDataList.toArray(new QRData[0]);
-
-        byte[] data = createData(typeNumber, errorCorrectionLevel, dataArray);
-
+        byte[] data = QRUtil.createData(typeNumber, errorCorrectionLevel, qrDataList);
         mapData(data, maskPattern);
     }
 
-    private void mapData(byte[] data, int maskPattern) {
-
+    private void mapData(byte[] data, MaskPattern maskPattern) {
         int inc = -1;
         int row = moduleCount - 1;
         int bitIndex = 7;
         int byteIndex = 0;
 
         for (int col = moduleCount - 1; col > 0; col -= 2) {
-
             if (col == 6) col--;
-
             while (true) {
-
                 for (int c = 0; c < 2; c++) {
-
                     if (modules[row][col - c] == null) {
-
                         boolean dark = false;
-
                         if (byteIndex < data.length) {
                             dark = (((data[byteIndex] >>> bitIndex) & 1) == 1);
                         }
-
-                        boolean mask = QRUtil.getMask(maskPattern, row, col - c);
-
+                        boolean mask = maskPattern.invoke(row, col - c);
                         if (mask) {
                             dark = !dark;
                         }
-
                         modules[row][col - c] = dark;
                         bitIndex--;
-
                         if (bitIndex == -1) {
                             byteIndex++;
                             bitIndex = 7;
                         }
                     }
                 }
-
                 row += inc;
-
                 if (row < 0 || moduleCount <= row) {
                     row -= inc;
                     inc = -inc;
@@ -269,37 +236,29 @@ public class QRCode {
     }
 
     /**
-     * 位置合わせパターンを設定
+     * 设置位置对其样式
      */
     private void setupPositionAdjustPattern() {
-
         int[] pos = QRUtil.getPatternPosition(typeNumber);
-
         for (int row : pos) {
             for (int col : pos) {
                 if (modules[row][col] != null) {
                     continue;
                 }
-
                 for (int r = -2; r <= 2; r++) {
-
                     for (int c = -2; c <= 2; c++) {
-
-                        if (r == -2 || r == 2 || c == -2 || c == 2
-                                || (r == 0 && c == 0)) {
-                            modules[row + r][col + c] = Boolean.TRUE;
-                        } else {
-                            modules[row + r][col + c] = Boolean.FALSE;
-                        }
+                        modules[row + r][col + c] =
+                                r == -2 || r == 2
+                                || c == -2 || c == 2
+                                || (r == 0 && c == 0);
                     }
                 }
-
             }
         }
     }
 
     /**
-     * 位置検出パターンを設定
+     * 设置位置检测样式
      */
     private void setupPositionProbePattern(int row, int col) {
 
@@ -324,7 +283,7 @@ public class QRCode {
     }
 
     /**
-     * タイミングパターンを設定
+     * 设定Timing样式
      */
     private void setupTimingPattern() {
         for (int r = 8; r < moduleCount - 8; r++) {
@@ -342,17 +301,14 @@ public class QRCode {
     }
 
     /**
-     * 型番を設定
+     * 设置类型数字
      */
     private void setupTypeNumber(boolean test) {
-
         int bits = QRUtil.getBCHTypeNumber(typeNumber);
-
         for (int i = 0; i < 18; i++) {
             boolean mod = !test && ((bits >> i) & 1) == 1;
             modules[i / 3][i % 3 + moduleCount - 8 - 3] = mod;
         }
-
         for (int i = 0; i < 18; i++) {
             boolean mod = !test && ((bits >> i) & 1) == 1;
             modules[i % 3 + moduleCount - 8 - 3][i / 3] = mod;
@@ -360,18 +316,14 @@ public class QRCode {
     }
 
     /**
-     * 形式情報を設定
+     * 设置类型信息
      */
     private void setupTypeInfo(boolean test, int maskPattern) {
-
-        int data = (errorCorrectionLevel << 3) | maskPattern;
+        int data = (errorCorrectionLevel.value << 3) | maskPattern;
         int bits = QRUtil.getBCHTypeInfo(data);
-
-        // 縦方向
+        // 纵向
         for (int i = 0; i < 15; i++) {
-
             boolean mod = !test && ((bits >> i) & 1) == 1;
-
             if (i < 6) {
                 modules[i][8] = mod;
             } else if (i < 8) {
@@ -381,11 +333,9 @@ public class QRCode {
             }
         }
 
-        // 横方向
+        // 横向
         for (int i = 0; i < 15; i++) {
-
             boolean mod = !test && ((bits >> i) & 1) == 1;
-
             if (i < 8) {
                 modules[8][moduleCount - i - 1] = mod;
             } else if (i < 9) {
@@ -399,148 +349,26 @@ public class QRCode {
         modules[moduleCount - 8][8] = !test;
     }
 
-    public static byte[] createData(int typeNumber, int errorCorrectionLevel, QRData[] dataArray) {
-
-        RSBlock[] rsBlocks = RSBlock.getRSBlocks(typeNumber, errorCorrectionLevel);
-
-        BitBuffer buffer = new BitBuffer();
-
-        for (QRData data : dataArray) {
-            buffer.put(data.getMode(), 4);
-            buffer.put(data.getLength(), data.getLengthInBits(typeNumber));
-            data.write(buffer);
-        }
-
-        // 最大データ数を計算
-        int totalDataCount = 0;
-        for (RSBlock rsBlock : rsBlocks) {
-            totalDataCount += rsBlock.getDataCount();
-        }
-
-        if (buffer.getLengthInBits() > totalDataCount * 8) {
-            throw new IllegalArgumentException("code length overflow. ("
-                    + buffer.getLengthInBits()
-                    + ">"
-                    + totalDataCount * 8
-                    + ")");
-        }
-
-        // 終端コード
-        if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
-            buffer.put(0, 4);
-        }
-
-        // padding
-        while (buffer.getLengthInBits() % 8 != 0) {
-            buffer.put(false);
-        }
-
-        // padding
-        while (true) {
-
-            if (buffer.getLengthInBits() >= totalDataCount * 8) {
-                break;
-            }
-            buffer.put(PAD0, 8);
-
-            if (buffer.getLengthInBits() >= totalDataCount * 8) {
-                break;
-            }
-            buffer.put(PAD1, 8);
-        }
-
-        return createBytes(buffer, rsBlocks);
-    }
-
-    private static byte[] createBytes(BitBuffer buffer, RSBlock[] rsBlocks) {
-
-        int offset = 0;
-
-        int maxDcCount = 0;
-        int maxEcCount = 0;
-
-        int[][] dcdata = new int[rsBlocks.length][];
-        int[][] ecdata = new int[rsBlocks.length][];
-
-        for (int r = 0; r < rsBlocks.length; r++) {
-
-            int dcCount = rsBlocks[r].getDataCount();
-            int ecCount = rsBlocks[r].getTotalCount() - dcCount;
-
-            maxDcCount = Math.max(maxDcCount, dcCount);
-            maxEcCount = Math.max(maxEcCount, ecCount);
-
-            dcdata[r] = new int[dcCount];
-            for (int i = 0; i < dcdata[r].length; i++) {
-                dcdata[r][i] = 0xff & buffer.getBuffer()[i + offset];
-            }
-            offset += dcCount;
-
-            Polynomial rsPoly = QRUtil.getErrorCorrectPolynomial(ecCount);
-            Polynomial rawPoly = new Polynomial(dcdata[r], rsPoly.getLength() - 1);
-
-            Polynomial modPoly = rawPoly.mod(rsPoly);
-            ecdata[r] = new int[rsPoly.getLength() - 1];
-            for (int i = 0; i < ecdata[r].length; i++) {
-                int modIndex = i + modPoly.getLength() - ecdata[r].length;
-                ecdata[r][i] = (modIndex >= 0) ? modPoly.get(modIndex) : 0;
-            }
-
-        }
-
-        int totalCodeCount = 0;
-        for (RSBlock rsBlock : rsBlocks) {
-            totalCodeCount += rsBlock.getTotalCount();
-        }
-
-        byte[] data = new byte[totalCodeCount];
-
-        int index = 0;
-
-        for (int i = 0; i < maxDcCount; i++) {
-            for (int r = 0; r < rsBlocks.length; r++) {
-                if (i < dcdata[r].length) {
-                    data[index++] = (byte) dcdata[r][i];
-                }
-            }
-        }
-
-        for (int i = 0; i < maxEcCount; i++) {
-            for (int r = 0; r < rsBlocks.length; r++) {
-                if (i < ecdata[r].length) {
-                    data[index++] = (byte) ecdata[r][i];
-                }
-            }
-        }
-
-        return data;
-    }
-
     /**
-     * 最小の型番となる QRCode を作成する。
+     * 创建二维码
      *
-     * @param data                 データ
-     * @param errorCorrectionLevel 誤り訂正レベル
+     * @param data                 数据
+     * @param errorCorrectionLevel 二维码纠错等级
      */
-    public static QRCode getMinimumQRCode(String data, int errorCorrectionLevel) {
-
-        int mode = QRUtil.getMode(data);
-
+    public static QRCode create(String data, ErrorCorrectionLevel errorCorrectionLevel) {
+        Mode mode = QRUtil.getMode(data);
         QRCode qr = new QRCode();
         qr.setErrorCorrectionLevel(errorCorrectionLevel);
         qr.addData(data, mode);
 
         int length = qr.getData(0).getLength();
-
         for (int typeNumber = 1; typeNumber <= 10; typeNumber++) {
             if (length <= QRUtil.getMaxLength(typeNumber, mode, errorCorrectionLevel)) {
                 qr.setTypeNumber(typeNumber);
                 break;
             }
         }
-
         qr.make();
-
         return qr;
     }
 

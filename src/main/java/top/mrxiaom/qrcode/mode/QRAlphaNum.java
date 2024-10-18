@@ -1,11 +1,14 @@
-package top.mrxiaom.qrcode;
+package top.mrxiaom.qrcode.mode;
+
+import top.mrxiaom.qrcode.utils.BitBuffer;
+import top.mrxiaom.qrcode.enums.Mode;
 
 /**
  * QRAlphaNum
  *
  * @author Kazuhiko Arase
  */
-public class QRAlphaNum extends QRData {
+public class QRAlphaNum extends AbstractQRData {
 
     public QRAlphaNum(String data) {
         super(Mode.MODE_ALPHA_NUM, data);
@@ -61,6 +64,5 @@ public class QRAlphaNum extends QRData {
                     throw new IllegalArgumentException("illegal char :" + c);
             }
         }
-
     }
 }
