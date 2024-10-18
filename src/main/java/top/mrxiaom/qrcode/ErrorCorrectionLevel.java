@@ -1,4 +1,4 @@
-package com.d_project.qrcode;
+package top.mrxiaom.qrcode;
 
 /**
  * 誤り訂正レベル.
